@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Geni-Health | Connecting...</title>
+    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+</head>
+<body style="display:flex; justify-content:center; align-items:center; height:100vh; font-family:sans-serif; background:#f8fafc; margin:0;">
+    <div style="text-align:center;">
+        <div class="loader"></div>
+        <p id="status" style="color:#64748b; margin-top:15px;">กำลังเชื่อมต่อระบบ LINE...</p>
+    </div>
+
+    <style>
+        .loader { border:4px solid #f3f3f3; border-top:4px solid #6366f1; border-radius:50%; width:30px; height:30px; animation:spin 1s linear infinite; margin:0 auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+
+    <script>
+        const LIFF_ID = "2009502871-TIwYuLdJ"; 
+        const N8N_FORM_URL = "https://orawan.app.n8n.cloud/form/369a7d68-bca7-4635-bc87-e9ec82e60925";
+
+        async function main() {
+            try {
+                await liff.init({ liffId: LIFF_ID });
+                if (!liff.isLoggedIn()) {
+                    liff.login();
+                } else {
+                    const profile = await liff.getProfile();
+                    // ส่งไปหน้า n8n Form พร้อม userId ผ่าน URL Parameter
+                    window.location.replace(`${N8N_FORM_URL}?userId=${profile.userId}`);
+                }
+            } catch (err) {
+                document.getElementById('status').innerText = "Error: " + err.message;
+            }
+        }
+        main();
+    </script>
+</body>
+</html>
