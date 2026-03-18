@@ -1,35 +1,61 @@
 <!DOCTYPE html>
-<html>
+<html lang="th">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Geni-Health Analysis</title>
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <style>
+        body { font-family: 'Sarabun', sans-serif; background: #1e1b4b; display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; margin: 0; color: white; overflow: hidden; }
+        .loader { border: 4px solid rgba(255,255,255,0.1); border-top: 4px solid #6366f1; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin-bottom: 25px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .status-text { letter-spacing: 2px; font-size: 14px; font-weight: bold; color: #a5b4fc; margin-bottom: 10px; text-transform: uppercase; }
+        .sub-text { opacity: 0.7; font-size: 14px; text-align: center; padding: 0 30px; line-height: 1.6; }
+        .progress-bar { width: 200px; height: 4px; background: rgba(255,255,255,0.1); border-radius: 10px; margin-top: 20px; position: relative; overflow: hidden; }
+        .progress-inner { position: absolute; left: 0; top: 0; height: 100%; background: #6366f1; width: 0%; transition: width 0.5s; }
+    </style>
 </head>
-<body style="text-align: center; font-family: sans-serif; padding-top: 100px; background-color: #f8fafc;">
-    <div style="font-size: 50px;">✅</div>
-    <h2 style="color: #1e1b4b;">ส่งข้อมูลสำเร็จ</h2>
-    <p style="color: #64748b;">ระบบกำลังวิเคราะห์ผลสุขภาพของคุณ<br>หน้าต่างนี้จะปิดลงอัตโนมัติใน 5 วินาที...</p>
+<body>
+    <div class="loader"></div>
+    <div class="status-text" id="status-title">AI Analyzing Data</div>
+    <div class="sub-text" id="status-desc">ระบบ Geni-Health™ กำลังวิเคราะห์ดัชนีสุขภาพและจัดทำรายงานระดับพรีเมียมให้คุณ...</div>
+    <div class="progress-bar"><div class="progress-inner" id="bar"></div></div>
 
     <script>
-        async function closeLiff() {
-            try {
-                // เริ่มต้นระบบ LIFF
-                await liff.init({ liffId: "2009502871-TIwYuLdJ" });
-                
-                // สั่งให้รอ 5 วินาที (5000 มิลลิวินาที) ก่อนจะปิดหน้าต่าง
-                setTimeout(() => {
-                    if (liff.isInClient()) {
-                        liff.closeWindow();
-                    } else {
-                        // กรณีเปิดใน Browser ปกติ
-                        document.querySelector('p').innerText = "ขอบคุณครับ คุณสามารถปิดหน้าต่างนี้ได้เลย";
-                    }
-                }, 10000); 
+        const statusTitles = ["AI Analyzing Data", "Processing Insights", "Finalizing Report", "Success"];
+        const statusDescs = [
+            "กำลังเชื่อมต่อระบบ AI อัจฉริยะ...",
+            "คำนวณ BMI และดัชนีมวลกายแบบเจาะลึก...",
+            "จัดทำข้อแนะนำเฉพาะบุคคลระดับเอ็กซ์คลูซีฟ...",
+            "ส่งรายงานเข้าสู่ห้องแชทของคุณเรียบร้อยแล้ว!"
+        ];
 
-            } catch (err) {
-                console.error("LIFF Error:", err);
-            }
+        async function startProcess() {
+            await liff.init({ liffId: "2009502871-TIwYuLdJ" });
+            
+            let progress = 0;
+            const bar = document.getElementById('bar');
+            const title = document.getElementById('status-title');
+            const desc = document.getElementById('status-desc');
+
+            // จำลองการโหลดให้สัมพันธ์กับเวลาของ Gemini (ประมาณ 12 วินาที)
+            const interval = setInterval(() => {
+                progress += 1;
+                bar.style.width = progress + "%";
+
+                if (progress === 25) { title.innerText = statusTitles[1]; desc.innerText = statusDescs[1]; }
+                if (progress === 60) { title.innerText = statusTitles[2]; desc.innerText = statusDescs[2]; }
+                if (progress === 90) { title.innerText = statusTitles[3]; desc.innerText = statusDescs[3]; }
+
+                if (progress >= 100) {
+                    clearInterval(interval);
+                    setTimeout(() => {
+                        if (liff.isInClient()) { liff.closeWindow(); }
+                    }, 1500); // พอครบ 100% ให้ค้างไว้แป๊บนึงแล้วปิด
+                }
+            }, 120); // 120ms * 100 = 12 วินาที (พอดีกับ Gemini)
         }
-        closeLiff();
+        startProcess();
     </script>
 </body>
 </html>
