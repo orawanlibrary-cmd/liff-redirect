@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Geni-Health Premium Report</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@400;700&display=swap');
+        body { font-family: 'Sarabun', sans-serif; background: #f8fafc; margin: 0; padding: 20px; color: #1e1b4b; }
+        
+        /* สไตล์สำหรับใบรายงาน */
+        #reportContent { 
+            background: white; border-radius: 32px; padding: 40px; 
+            max-width: 500px; margin: auto; text-align: center;
+            border: 1px solid #e2e8f0; box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+        }
+        
+        .header-tag { font-size: 11px; color: #6366f1; font-weight: 700; letter-spacing: 2px; margin-bottom: 10px; text-transform: uppercase; }
+        .bmi-value { font-size: 64px; font-weight: 800; color: #1e1b4b; margin: 15px 0; }
+        .status-badge { display: inline-block; padding: 8px 24px; border-radius: 100px; color: white; font-weight: bold; font-size: 16px; margin-bottom: 25px; }
+        
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 25px 0; }
+        .stat-box { background: #f8fafc; padding: 20px; border-radius: 20px; border: 1px solid #f1f5f9; text-align: center; }
+        .stat-label { font-size: 11px; color: #64748b; font-weight: bold; margin-bottom: 5px; }
+        .stat-value { font-size: 18px; font-weight: bold; color: #1e1b4b; }
+
+        /* ปุ่มดาวน์โหลด */
+        .btn-download {
+            background: #1e1b4b; color: white; border: none; padding: 15px 30px;
+            border-radius: 15px; font-weight: bold; cursor: pointer;
+            margin-top: 25px; width: 100%; max-width: 300px;
+            transition: 0.3s; display: flex; align-items: center; justify-content: center; gap: 10px;
+            margin-left: auto; margin-right: auto;
+        }
+        .btn-download:hover { background: #312e81; transform: translateY(-2px); }
+        
+        @media print { .btn-download { display: none; } } /* ซ่อนปุ่มเวลาทำ PDF */
+    </style>
+</head>
+<body>
+
+    <div id="reportContent">
+        <div class="header-tag">Official Health Assessment</div>
+        <h2 id="displayName" style="margin: 0; color: #1e1b4b;">คุณผู้รับบริการ</h2>
+        <p style="font-size: 13px; color: #94a3b8; margin-top: 5px;">Geni-Health™ Premium Analysis</p>
+        
+        <div class="bmi-value" id="bmiVal">0.0</div>
+        <div class="status-badge" id="bmiStatus">Checking...</div>
+        
+        <div style="font-size: 14px; color: #64748b;">
+            ช่วงน้ำหนักที่แนะนำ: <strong id="range" style="color: #1e1b4b;">0-0 kg</strong>
+        </div>
+
+        <div class="grid">
+            <div class="stat-box">
+                <div class="stat-label">ENERGY (TDEE)</div>
+                <div class="stat-value" id="tdeeVal">0 kcal</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">HYDRATION</div>
+                <div class="stat-value" id="waterVal">0 Liters</div>
+            </div>
+        </div>
+
+        <div style="border-top: 1px dashed #e2e8f0; padding-top: 20px; margin-top: 10px; font-size: 12px; color: #94a3b8; line-height: 1.6;">
+            รายงานนี้จัดทำขึ้นโดยระบบ AI เพื่อการวางแผนสุขภาพเบื้องต้น <br>
+            Generated on: <span id="dateStr"></span>
+        </div>
+    </div>
+
+    <button class="btn-download" onclick="downloadPDF()">
+        📥 ดาวน์โหลดรายงาน (PDF)
+    </button>
+
+    <script>
+        // 1. รับค่าจาก URL
+        const params = new URLSearchParams(window.location.search);
+        const name = params.get('name') || 'ผู้รับบริการ';
+        const bmi = params.get('bmi') || '0.0';
+        const tdee = params.get('tdee') || '0';
+        const water = params.get('water') || '0';
+        
+        // คำนวณช่วงน้ำหนักเบื้องต้น (ส่งมาใน URL ก็ได้ หรือคำนวณใหม่ที่นี่)
+        document.getElementById('displayName').innerText = "คุณ " + name;
+        document.getElementById('bmiVal').innerText = bmi;
+        document.getElementById('tdeeVal').innerText = parseInt(tdee).toLocaleString() + " kcal";
+        document.getElementById('waterVal').innerText = water + " L";
+        document.getElementById('dateStr').innerText = new Date().toLocaleDateString('th-TH');
+
+        // 2. จัดการสีตาม BMI
+        const b = parseFloat(bmi);
+        const statusBox = document.getElementById('bmiStatus');
+        if (b < 18.5) { statusBox.innerText = "Underweight"; statusBox.style.background = "#3b82f6"; }
+        else if (b < 23) { statusBox.innerText = "Optimal Health"; statusBox.style.background = "#10b981"; }
+        else if (b < 25) { statusBox.innerText = "Overweight"; statusBox.style.background = "#f59e0b"; }
+        else { statusBox.innerText = "Obesity Alert"; statusBox.style.background = "#ef4444"; }
+
+        // 3. ฟังก์ชัน Download PDF
+        function downloadPDF() {
+            const element = document.getElementById('reportContent');
+            const opt = {
+                margin:       10,
+                filename:     `GeniHealth_Report_${name}.pdf`,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+            html2pdf().set(opt).from(element).save();
+        }
+    </script>
+</body>
+</html>
