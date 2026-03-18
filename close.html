@@ -1,15 +1,33 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="UTF-8">
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 </head>
-<body style="text-align: center; font-family: sans-serif; padding-top: 50px;">
-    <h2>ส่งข้อมูลสำเร็จ ✅</h2>
-    <p>ระบบกำลังวิเคราะห์ผล... หน้าต่างนี้จะปิดลงอัตโนมัติ</p>
+<body style="text-align: center; font-family: sans-serif; padding-top: 100px; background-color: #f8fafc;">
+    <div style="font-size: 50px;">✅</div>
+    <h2 style="color: #1e1b4b;">ส่งข้อมูลสำเร็จ</h2>
+    <p style="color: #64748b;">ระบบกำลังวิเคราะห์ผลสุขภาพของคุณ<br>หน้าต่างนี้จะปิดลงอัตโนมัติใน 5 วินาที...</p>
+
     <script>
         async function closeLiff() {
-            await liff.init({ liffId: "2009502871-TIwYuLdJ" });
-            liff.closeWindow();
+            try {
+                // เริ่มต้นระบบ LIFF
+                await liff.init({ liffId: "2009502871-TIwYuLdJ" });
+                
+                // สั่งให้รอ 5 วินาที (5000 มิลลิวินาที) ก่อนจะปิดหน้าต่าง
+                setTimeout(() => {
+                    if (liff.isInClient()) {
+                        liff.closeWindow();
+                    } else {
+                        // กรณีเปิดใน Browser ปกติ
+                        document.querySelector('p').innerText = "ขอบคุณครับ คุณสามารถปิดหน้าต่างนี้ได้เลย";
+                    }
+                }, 5000); 
+
+            } catch (err) {
+                console.error("LIFF Error:", err);
+            }
         }
         closeLiff();
     </script>
