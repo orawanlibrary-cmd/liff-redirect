@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+</head>
+<body style="text-align: center; font-family: sans-serif; padding-top: 50px;">
+    <h2>ส่งข้อมูลสำเร็จ ✅</h2>
+    <p>ระบบกำลังวิเคราะห์ผล... หน้าต่างนี้จะปิดลงอัตโนมัติ</p>
+    <script>
+        async function closeLiff() {
+            await liff.init({ liffId: "2009502871-TIwYuLdJ" });
+            liff.closeWindow();
+        }
+        closeLiff();
+    </script>
+</body>
+</html>
