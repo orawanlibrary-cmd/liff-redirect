@@ -9,7 +9,6 @@
         @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@400;700&display=swap');
         body { font-family: 'Sarabun', sans-serif; background: #f8fafc; margin: 0; padding: 20px; color: #1e1b4b; }
         
-        /* สไตล์สำหรับใบรายงาน */
         #reportContent { 
             background: white; border-radius: 32px; padding: 40px; 
             max-width: 500px; margin: auto; text-align: center;
@@ -25,7 +24,14 @@
         .stat-label { font-size: 11px; color: #64748b; font-weight: bold; margin-bottom: 5px; }
         .stat-value { font-size: 18px; font-weight: bold; color: #1e1b4b; }
 
-        /* ปุ่มดาวน์โหลด */
+        /* ส่วนแสดงบทวิเคราะห์ AI */
+        .ai-analysis {
+            text-align: left; background: #ffffff; border: 1px solid #eef2ff;
+            border-radius: 20px; padding: 25px; margin-top: 25px;
+            line-height: 1.8; color: #475569; font-size: 14px;
+            white-space: pre-wrap; /* รักษาการเว้นบรรทัด */
+        }
+
         .btn-download {
             background: #1e1b4b; color: white; border: none; padding: 15px 30px;
             border-radius: 15px; font-weight: bold; cursor: pointer;
@@ -35,7 +41,7 @@
         }
         .btn-download:hover { background: #312e81; transform: translateY(-2px); }
         
-        @media print { .btn-download { display: none; } } /* ซ่อนปุ่มเวลาทำ PDF */
+        @media print { .btn-download { display: none; } }
     </style>
 </head>
 <body>
@@ -63,7 +69,12 @@
             </div>
         </div>
 
-        <div style="border-top: 1px dashed #e2e8f0; padding-top: 20px; margin-top: 10px; font-size: 12px; color: #94a3b8; line-height: 1.6;">
+        <div class="ai-analysis">
+            <div style="font-weight: 700; color: #1e1b4b; margin-bottom: 10px; border-bottom: 1px solid #f1f5f9; padding-bottom: 5px;">💡 บทวิเคราะห์โดย AI</div>
+            <div id="aiAdvice">ไม่พบข้อมูลคำแนะนำ</div>
+        </div>
+
+        <div style="border-top: 1px dashed #e2e8f0; padding-top: 20px; margin-top: 20px; font-size: 12px; color: #94a3b8; line-height: 1.6;">
             รายงานนี้จัดทำขึ้นโดยระบบ AI เพื่อการวางแผนสุขภาพเบื้องต้น <br>
             Generated on: <span id="dateStr"></span>
         </div>
@@ -80,12 +91,16 @@
         const bmi = params.get('bmi') || '0.0';
         const tdee = params.get('tdee') || '0';
         const water = params.get('water') || '0';
-        
-        // คำนวณช่วงน้ำหนักเบื้องต้น (ส่งมาใน URL ก็ได้ หรือคำนวณใหม่ที่นี่)
+        const advice = params.get('advice') || 'ข้อมูลสรุปถูกส่งให้คุณทางอีเมลเรียบร้อยแล้ว';
+        const range = params.get('range') || 'คำนวณจากส่วนสูงของคุณ';
+
+        // แสดงผลข้อมูลพื้นฐาน
         document.getElementById('displayName').innerText = "คุณ " + name;
         document.getElementById('bmiVal').innerText = bmi;
         document.getElementById('tdeeVal').innerText = parseInt(tdee).toLocaleString() + " kcal";
         document.getElementById('waterVal').innerText = water + " L";
+        document.getElementById('aiAdvice').innerText = advice;
+        document.getElementById('range').innerText = range;
         document.getElementById('dateStr').innerText = new Date().toLocaleDateString('th-TH');
 
         // 2. จัดการสีตาม BMI
@@ -101,7 +116,7 @@
             const element = document.getElementById('reportContent');
             const opt = {
                 margin:       10,
-                filename:     `GeniHealth_Report_${name}.pdf`,
+                filename:     `HealthReport_${name}.pdf`,
                 image:        { type: 'jpeg', quality: 0.98 },
                 html2canvas:  { scale: 2, useCORS: true },
                 jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
