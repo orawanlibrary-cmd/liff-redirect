@@ -85,44 +85,75 @@
     </button>
 
     <script>
-        // 1. รับค่าจาก URL
-        const params = new URLSearchParams(window.location.search);
-        const name = params.get('name') || 'ผู้รับบริการ';
-        const bmi = params.get('bmi') || '0.0';
-        const tdee = params.get('tdee') || '0';
-        const water = params.get('water') || '0';
-        const advice = params.get('advice') || 'ข้อมูลสรุปถูกส่งให้คุณทางอีเมลเรียบร้อยแล้ว';
-        const range = params.get('range') || 'คำนวณจากส่วนสูงของคุณ';
+    // 1. รับค่า ID จาก URL เท่านั้น (เช่น ?id=171136...)
+    const params = new URLSearchParams(window.location.search);
+    const reportId = params.get('id');
 
-        // แสดงผลข้อมูลพื้นฐาน
-        document.getElementById('displayName').innerText = "คุณ " + name;
-        document.getElementById('bmiVal').innerText = bmi;
-        document.getElementById('tdeeVal').innerText = parseInt(tdee).toLocaleString() + " kcal";
-        document.getElementById('waterVal').innerText = water + " L";
-        document.getElementById('aiAdvice').innerText = advice;
-        document.getElementById('range').innerText = range;
-        document.getElementById('dateStr').innerText = new Date().toLocaleDateString('th-TH');
+    // ฟังก์ชันดึงข้อมูลจาก n8n
+    async function fetchReportData() {
+        if (!reportId) {
+            document.getElementById('aiAdvice').innerText = "ไม่พบรหัสรายงาน กรุณาเข้าผ่านลิงก์จาก LINE";
+            return;
+        }
 
-        // 2. จัดการสีตาม BMI
-        const b = parseFloat(bmi);
+        try {
+            // *** แก้ไข URL ตรงนี้ให้เป็น Production Webhook URL ของคุณใน n8n ***
+            const webhookUrl = `https://orawan.app.n8n.cloud/webhook/get-health-data?id=${reportId}`;
+            
+            const response = await fetch(webhookUrl);
+            if (!response.ok) throw new Error('Network response was not ok');
+            
+            const data = await response.json();
+
+            // 2. แสดงผลข้อมูลที่ดึงมาจาก Google Sheets
+            const name = data.name || 'ผู้รับบริการ';
+            const bmi = data.bmi || '0.0';
+            const tdee = data.tdee || '0';
+            const water = data.water || '0';
+            const advice = data.analysis || 'ข้อมูลสรุปถูกส่งให้คุณทางอีเมลเรียบร้อยแล้ว';
+            const range = data.range || 'คำนวณจากส่วนสูงของคุณ';
+
+            document.getElementById('displayName').innerText = "คุณ " + name;
+            document.getElementById('bmiVal').innerText = bmi;
+            document.getElementById('tdeeVal').innerText = parseInt(tdee).toLocaleString() + " kcal";
+            document.getElementById('waterVal').innerText = water + " L";
+            document.getElementById('aiAdvice').innerText = advice;
+            document.getElementById('range').innerText = range;
+            document.getElementById('dateStr').innerText = new Date().toLocaleDateString('th-TH');
+
+            // 3. จัดการสีตาม BMI
+            updateBMIStatus(parseFloat(bmi));
+
+        } catch (err) {
+            console.error("Fetch Error:", err);
+            document.getElementById('aiAdvice').innerText = "เกิดข้อผิดพลาดในการโหลดข้อมูล กรุณาลองใหม่อีกครั้ง";
+        }
+    }
+
+    function updateBMIStatus(b) {
         const statusBox = document.getElementById('bmiStatus');
         if (b < 18.5) { statusBox.innerText = "Underweight"; statusBox.style.background = "#3b82f6"; }
         else if (b < 23) { statusBox.innerText = "Optimal Health"; statusBox.style.background = "#10b981"; }
         else if (b < 25) { statusBox.innerText = "Overweight"; statusBox.style.background = "#f59e0b"; }
         else { statusBox.innerText = "Obesity Alert"; statusBox.style.background = "#ef4444"; }
+    }
 
-        // 3. ฟังก์ชัน Download PDF
-        function downloadPDF() {
-            const element = document.getElementById('reportContent');
-            const opt = {
-                margin:       10,
-                filename:     `HealthReport_${name}.pdf`,
-                image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2, useCORS: true },
-                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
-            };
-            html2pdf().set(opt).from(element).save();
-        }
-    </script>
+    // เรียกใช้งานฟังก์ชันดึงข้อมูลทันทีที่เปิดหน้าเว็บ
+    fetchReportData();
+
+    // 4. ฟังก์ชัน Download PDF (คงเดิม)
+    function downloadPDF() {
+        const name = document.getElementById('displayName').innerText;
+        const element = document.getElementById('reportContent');
+        const opt = {
+            margin:       10,
+            filename:     `HealthReport_${name}.pdf`,
+            image:        { type: 'jpeg', quality: 0.98 },
+            html2canvas:  { scale: 2, useCORS: true },
+            jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+        html2pdf().set(opt).from(element).save();
+    }
+</script>
 </body>
 </html>
