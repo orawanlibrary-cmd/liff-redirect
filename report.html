@@ -99,7 +99,7 @@
 
         try {
             // เปลี่ยน URL ตรงนี้เป็น Production Webhook URL ของคุณที่ได้จาก n8n
-            const webhookUrl = `https://orawan.app.n8n.cloud/webhook/get-health-data?id=${reportId}`;
+            const webhookUrl = `https://n8n.nex2gether.site/webhook/get-health-data?id=${reportId}`;
             
             const response = await fetch(webhookUrl);
             if (!response.ok) throw new Error('Data not found');
